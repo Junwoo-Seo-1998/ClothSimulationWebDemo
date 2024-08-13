@@ -288,9 +288,10 @@ class Cloths {
     buffer.setUsage(THREE.StreamDrawUsage);
     geometry.setAttribute("position", buffer);
     geometry.setIndex(clothsMesh.faceTriIds);
-    let material = new THREE.MeshStandardMaterial({
-      color: 0x0fffff,
+    let material = new THREE.MeshPhysicalMaterial({
+      color: 0xFBF1D7,
       side: THREE.DoubleSide,
+      //transmission: 0.0
     });
     //material.flatShading = true;
     this.mesh = new THREE.Mesh(geometry, material);
@@ -566,13 +567,13 @@ function start() {
 
   // Lights
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 2);
-  hemiLight.color.setHSL(0.6, 1, 0.6);
-  hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+  //hemiLight.color.setHSL( 0.6, 1, 0.6 );
+	//hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
   hemiLight.position.set(0, 50, 0);
   scene.add(hemiLight);
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 3);
-  dirLight.color.setHSL(0.1, 1, 0.95);
+  //dirLight.color.setHSL(0.1, 1, 0.95);
   dirLight.position.setFromSphericalCoords(5, phi, theta);
   dirLight.position.multiplyScalar(30);
   scene.add(dirLight);
@@ -583,8 +584,9 @@ function start() {
 
   // GROUND
   const groundGeo = new THREE.PlaneGeometry(100, 100);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  groundMat.color.setHSL(0.095, 1, 0.75);
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0xe1aa72 });
+  //groundMat.color.setHSL( 0.095, 1, 0.75 );
+
 
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.y = -0.0001;
