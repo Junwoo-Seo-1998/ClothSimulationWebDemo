@@ -19,6 +19,18 @@ let mainObj;
 
 let sky, sun;
 
+let play = false;
+
+function onPlayStop() {
+  play = !play;
+  if (play) document.getElementById("play").innerText = "Stop";
+  else document.getElementById("play").innerText = "Play";
+}
+
+function onRestart() {
+  location.reload();
+}
+
 //helper class for vector math
 class Vector3 {
   constructor(verts, ith) {
@@ -174,6 +186,8 @@ class PickingControls {
     let body = intersects[0].object.userData;
     if (!body) return;
 
+    if (!play) onPlayStop();
+
     this.selectedObject = body;
     this.distance = intersects[0].distance;
     let pos = this.raycaster.ray.origin.clone();
@@ -289,11 +303,9 @@ class Cloths {
     geometry.setAttribute("position", buffer);
     geometry.setIndex(clothsMesh.faceTriIds);
     let material = new THREE.MeshPhysicalMaterial({
-      color: 0xFBF1D7,
+      color: 0xfbf1d7,
       side: THREE.DoubleSide,
-      //transmission: 0.0
     });
-    //material.flatShading = true;
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.castShadow = true;
     this.mesh.geometry.computeVertexNormals();
@@ -303,11 +315,15 @@ class Cloths {
     this.mesh.layers.enable(1);
     scene.add(this.mesh);
 
-    this.centerPos=this.hangToAir();
+    this.centerPos = this.hangToAir();
+
+    //just to give wave on start.
+    this.vel[50 * 3 + 0] += 1;
+    this.vel[50 * 3 + 1] += 1;
+    this.vel[50 * 3 + 2] += 1;
   }
 
   hangToAir() {
-    
     let minX = Number.MAX_VALUE;
     let maxX = -Number.MAX_VALUE;
     let minY = Number.MAX_VALUE;
@@ -328,7 +344,7 @@ class Cloths {
         this.invMass[i] = 0.0;
     }
 
-    return new THREE.Vector3((minX+maxX)*0.5, (minY+maxY)*0.5, 0.0);
+    return new THREE.Vector3((minX + maxX) * 0.5, (minY + maxY) * 0.5, 0.0);
   }
 
   getNeighbors(triIds) {
@@ -537,6 +553,9 @@ function awake() {
   renderWindow.addEventListener("pointerdown", onMouseDown, false);
   renderWindow.addEventListener("pointermove", onMouseMove, false);
   renderWindow.addEventListener("pointerup", onMouseUp, false);
+
+  document.getElementById("play").addEventListener("click", onPlayStop);
+  document.getElementById("restart").addEventListener("click", onRestart);
 }
 
 function start() {
@@ -568,7 +587,7 @@ function start() {
   // Lights
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 2);
   //hemiLight.color.setHSL( 0.6, 1, 0.6 );
-	//hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+  //hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
   hemiLight.position.set(0, 50, 0);
   scene.add(hemiLight);
 
@@ -587,7 +606,6 @@ function start() {
   const groundMat = new THREE.MeshLambertMaterial({ color: 0xe1aa72 });
   //groundMat.color.setHSL( 0.095, 1, 0.75 );
 
-
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.y = -0.0001;
   ground.rotation.x = -Math.PI / 2;
@@ -596,16 +614,17 @@ function start() {
 
   let body = new Cloths(scene, clothMesh);
   mainObj = body;
-  
+
   camera.position.z = -1;
   camera.position.y = 1;
   camera.position.x = 0;
   //camera.lookAt(body.centerPos);
-  camControls.target=body.centerPos;
+  camControls.target = body.centerPos;
   camControls.update();
 }
 
 function Update(dt) {
+  if (!play) return;
   let sdt = dt / numSubsteps;
   for (let step = 0; step < numSubsteps; step++) {
     mainObj.solve(sdt);
